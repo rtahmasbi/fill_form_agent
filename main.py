@@ -113,12 +113,60 @@ async def _extract_fields_from_context(page: Page, context, skip_hidden: bool = 
             "exclusive_group": field_name if field_type == "checkbox" else "",
         }
 
-        # Resolve label via for= attribute (use original_id)
-        if field_id:
-            label_el = await page.query_selector(f'label[for="{field_id}"]')
-            if label_el:
-                field_info["label"] = await label_el.inner_text()
+        # ── Resolve label text — try multiple strategies ──────────────────
+        label_text = ""
 
+        # 1. <label for="id"> — standard HTML
+        if field_id and not label_text:
+            el = await page.query_selector(f'label[for="{field_id}"]')
+            if el:
+                label_text = (await el.inner_text()).strip()
+
+        # 2. Immediate next sibling that is a <label> or <span>
+        #    Covers: <input .../><label>text</label>
+        #            <input .../><span>text</span>
+        if not label_text:
+            label_text = await inp.evaluate("""el => {
+                let sib = el.nextElementSibling;
+                if (sib && (sib.tagName === 'LABEL' || sib.tagName === 'SPAN'))
+                    return sib.innerText.trim();
+                return '';
+            }""")
+
+        # 3. Parent container text — walk up to the nearest .checkbox-group /
+        #    .form-row / li / div and grab all text excluding the input's own value.
+        #    This catches patterns like:
+        #      <div class="checkbox-group">
+        #        <input type="checkbox" id="x"/>
+        #        <span>Long descriptive label text…</span>
+        #      </div>
+        if not label_text:
+            label_text = await inp.evaluate("""el => {
+                const stopTags = new Set(['FORM','BODY','HTML','TABLE','TR','TD','TH']);
+                let node = el.parentElement;
+                while (node && !stopTags.has(node.tagName)) {
+                    const txt = node.innerText.trim();
+                    if (txt.length > 0) return txt;
+                    node = node.parentElement;
+                }
+                return '';
+            }""")
+            # If the parent text is very long it probably contains the label +
+            # other sibling fields; take only the first 300 chars to stay useful.
+            if label_text and len(label_text) > 300:
+                label_text = label_text[:300].rsplit(' ', 1)[0] + '…'
+
+        # 4. aria-label / aria-labelledby fallback
+        if not label_text:
+            label_text = await inp.get_attribute("aria-label") or ""
+        if not label_text:
+            labelledby = await inp.get_attribute("aria-labelledby") or ""
+            if labelledby:
+                el = await page.query_selector(f'[id="{labelledby}"]')
+                if el:
+                    label_text = (await el.inner_text()).strip()
+
+        field_info["label"] = label_text
         fields.append(field_info)
 
     return fields
@@ -652,5 +700,5 @@ python main.py --url https://form.jotform.com/260497189942169 --user_info user_i
 python main.py --url https://form.jotform.com/260497189942169 --user_info user_info2.txt
 python main.py --url https://form.jotform.com/260497189942169 --user_info user_info3.txt
 
-python main.py --url https://mendrika-alma.github.io/form-submission/ --user_info user_info4.json  --headless false
+python main.py --url https://mendrika-alma.github.io/form-submission/ --user_info data_example/user_info4.txt  --headless false
 """

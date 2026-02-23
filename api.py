@@ -244,7 +244,7 @@ async def fill(job_id: str):
 
     user_info_path = job.get("user_info_path")
     if not user_info_path or not Path(user_info_path).exists():
-        raise HTTPException(status_code=400, detail="user_info4.txt missing. Run /extract first.")
+        raise HTTPException(status_code=400, detail="extracted info are missing. Run /extract first.")
 
     log_path        = _job_dir(job_id) / "fill.log"
     job["status"]   = "filling"

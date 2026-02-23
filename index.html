@@ -388,6 +388,10 @@
     <div class="pip-dot">3</div>
     <div class="pip-label">Fill</div>
   </div>
+  <div class="pip-step" id="pip-4">
+    <div class="pip-dot">4</div>
+    <div class="pip-label">Approve</div>
+  </div>
 </div>
 
 <!-- Step 1: Upload -->
@@ -474,22 +478,40 @@
   </div>
 </div>
 
-<!-- Approval -->
-<div id="approval-section" class="card approval-card" style="display:none">
+<!-- Step 4: Approve -->
+<div class="card" id="card-approve">
   <div class="card-header">
-    <h2 style="font-size:16px">⚠️ Approval Required</h2>
+    <div class="step-badge" style="background:#92400e">4</div>
+    <h2>Review &amp; Approve Submission</h2>
   </div>
-  <div class="approval-banner">
-    🔔 The form has been filled. Please review the values below before submitting.
+
+  <!-- Waiting state -->
+  <div id="approve-waiting">
+    <p class="card-desc" style="display:flex;align-items:center;gap:8px">
+      <span id="approve-waiting-spinner" class="spinner dark" style="display:none"></span>
+      <span id="approve-waiting-text">Waiting for the form to be filled…</span>
+    </p>
   </div>
-  <div class="approval-summary" id="approval-summary">(loading…)</div>
-  <div class="approval-buttons">
-    <button class="btn btn-approve" onclick="sendApproval('yes')">
-      ✅ Approve &amp; Submit
-    </button>
-    <button class="btn btn-decline" onclick="sendApproval('no')">
-      ❌ Cancel
-    </button>
+
+  <!-- Review state (shown when awaiting_approval) -->
+  <div id="approve-review" style="display:none">
+    <div class="approval-banner">
+      🔔 The agent has filled the form. Review the values below, then approve or cancel.
+    </div>
+    <div class="approval-summary" id="approval-summary">(loading…)</div>
+    <div class="approval-buttons">
+      <button class="btn btn-approve" id="btn-approve-yes" onclick="sendApproval('yes')">
+        ✅ Approve &amp; Submit
+      </button>
+      <button class="btn btn-decline" id="btn-approve-no" onclick="sendApproval('no')">
+        ❌ Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Result state -->
+  <div id="approve-result" style="display:none">
+    <p id="approve-result-text" class="card-desc"></p>
   </div>
 </div>
 
@@ -507,7 +529,7 @@ function showFileName(inputId, nameId) {
 
 /* ── pipeline ── */
 function setPipeline(active) {
-  [1,2,3].forEach(n => {
+  [1,2,3,4].forEach(n => {
     const el = document.getElementById('pip-' + n);
     el.className = 'pip-step' + (n < active ? ' complete' : n === active ? ' active' : '');
   });
@@ -616,6 +638,12 @@ async function doFill() {
   document.getElementById('btn-fill').disabled = true;
   document.getElementById('fill-spinner').style.display = 'inline-block';
   setTag('filling');
+  setPipeline(4);
+  document.getElementById('approve-waiting-spinner').style.display = 'inline-block';
+  document.getElementById('approve-waiting-text').textContent = 'Agent is launching, please wait…';
+  document.getElementById('approve-waiting').style.display = 'block';
+  document.getElementById('approve-review').style.display = 'none';
+  document.getElementById('approve-result').style.display = 'none';
   document.getElementById('log-output').textContent = 'Launching main.py…';
 
   const res  = await fetch('/fill/' + jobId, { method: 'POST' });
@@ -646,43 +674,70 @@ async function pollStatus() {
   document.getElementById('log-output').textContent =
     lines.length ? lines.join('\n') : '(no output yet)';
 
-  // ── show approval card when agent is waiting ─────────────────────────────
-  const approvalSection = document.getElementById('approval-section');
+  // ── drive Step 4 card based on status ───────────────────────────────────
+  const waiting = document.getElementById('approve-waiting');
+  const review  = document.getElementById('approve-review');
+  const result  = document.getElementById('approve-result');
+
+  if (data.status === 'filling') {
+    // Show spinner inside waiting text
+    waiting.style.display = 'block';
+    review.style.display  = 'none';
+    result.style.display  = 'none';
+    document.getElementById('approve-waiting-spinner').style.display = 'inline-block';
+    document.getElementById('approve-waiting-text').textContent = 'Agent is filling the form…';
+    setPipeline(4);
+  }
+
   if (data.status === 'awaiting_approval') {
-    approvalSection.style.display = 'block';
-    approvalSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    waiting.style.display = 'none';
+    review.style.display  = 'block';
+    result.style.display  = 'none';
     const summary = data.fill_summary || lines.join('\n') || '(no summary yet)';
     document.getElementById('approval-summary').textContent = summary;
-    // stop polling — user must act
+    document.getElementById('card-approve').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // stop polling — waiting for user action
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     document.getElementById('fill-spinner').style.display = 'none';
+    setPipeline(4);
     return;
-  } else {
-    approvalSection.style.display = 'none';
   }
 
   const finished = data.status === 'done'       ||
                    data.status === 'approved'    ||
                    data.status === 'declined'    ||
                    (data.status || '').startsWith('fill_failed');
+
   if (finished) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     document.getElementById('fill-spinner').style.display = 'none';
+    document.getElementById('approve-waiting-spinner').style.display = 'none';
     document.getElementById('btn-fill').disabled = false;
-    if (data.status === 'done') setPipeline(4);
+    waiting.style.display = 'none';
+    review.style.display  = 'none';
+    result.style.display  = 'block';
+    if (data.status === 'done') {
+      document.getElementById('approve-result-text').innerHTML =
+        '<span style="color:var(--success);font-weight:600">✅ Form submitted successfully!</span>';
+      setPipeline(5);
+    } else if (data.status === 'declined') {
+      document.getElementById('approve-result-text').innerHTML =
+        '<span style="color:var(--err);font-weight:600">❌ Submission cancelled by user.</span>';
+    } else {
+      document.getElementById('approve-result-text').innerHTML =
+        '<span style="color:var(--err);font-weight:600">⚠️ ' + data.status + '</span>';
+    }
   }
 }
 
 async function sendApproval(decision) {
   if (!jobId) return;
-  const approveBtn = document.querySelector('.btn-approve');
-  const declineBtn = document.querySelector('.btn-decline');
+  const approveBtn = document.getElementById('btn-approve-yes');
+  const declineBtn = document.getElementById('btn-approve-no');
   approveBtn.disabled = declineBtn.disabled = true;
 
   const res  = await fetch('/approve/' + jobId + '?decision=' + decision, { method: 'POST' });
   const data = await res.json();
-
-  document.getElementById('approval-section').style.display = 'none';
 
   if (!res.ok) {
     alert('Approval failed:\n' + JSON.stringify(data.detail));
@@ -690,11 +745,17 @@ async function sendApproval(decision) {
     return;
   }
 
-  // Update log immediately
   document.getElementById('log-output').textContent = data.message;
   setTag(decision === 'yes' ? 'approved' : 'declined');
 
-  // Resume polling to watch the submission finish
+  // Hide review panel, show result immediately
+  document.getElementById('approve-review').style.display = 'none';
+  const result = document.getElementById('approve-result');
+  result.style.display = 'block';
+  document.getElementById('approve-result-text').innerHTML = decision === 'yes'
+    ? '<span style="color:var(--accent);font-weight:600"><span class="spinner dark" style="display:inline-block;margin-right:6px"></span>Submitting form…</span>'
+    : '<span style="color:var(--err);font-weight:600">❌ Submission cancelled.</span>';
+
   if (decision === 'yes') {
     document.getElementById('fill-spinner').style.display = 'inline-block';
     pollTimer = setInterval(pollStatus, 3000);

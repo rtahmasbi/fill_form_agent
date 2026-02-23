@@ -1,0 +1,79 @@
+passport.type: P
+passport.country_code: USA
+passport.passport_number: E00009349
+passport.surname: TRAVELER
+passport.given_names: HAPPY
+passport.nationality: UNITED STATES OF AMERICA
+passport.date_of_birth: 05 FEB 1965
+passport.sex: M
+passport.place_of_birth: WASHINGTON, D.C., U.S.A.
+passport.date_of_issue: 10 JUL 2020
+passport.date_of_expiration: 09 JUL 2030
+passport.authority: UNITED STATES DEPARTMENT OF STATE
+machine_readable_zone.line1: P<USATRAVELER<<HAPPY<<<<<<<<<<<<<<<<<<<<<<<<<
+machine_readable_zone.line2: E000093499USA6502056M3007099340006673<085950
+Form: G-28
+Version: 09/17/18
+Pages: 4
+Part 1.Information About Attorney or Accredited Representative.Name.Family Name: Smith
+Part 1.Information About Attorney or Accredited Representative.Name.Given Name: Barbara
+Part 1.Information About Attorney or Accredited Representative.Name.Middle Name: None
+Part 1.Information About Attorney or Accredited Representative.USCIS Online Account Number: None
+Part 1.Information About Attorney or Accredited Representative.Address.Street Number and Name: 545 Bryant Street
+Part 1.Information About Attorney or Accredited Representative.Address.Apt Ste Flr: N/A
+Part 1.Information About Attorney or Accredited Representative.Address.City or Town: Palo Alto
+Part 1.Information About Attorney or Accredited Representative.Address.State: CA
+Part 1.Information About Attorney or Accredited Representative.Address.ZIP Code: 94301
+Part 1.Information About Attorney or Accredited Representative.Address.Province: N/A
+Part 1.Information About Attorney or Accredited Representative.Address.Postal Code: N/A
+Part 1.Information About Attorney or Accredited Representative.Address.Country: United States of America
+Part 1.Information About Attorney or Accredited Representative.Contact Information.Daytime Telephone Number: None
+Part 1.Information About Attorney or Accredited Representative.Contact Information.Fax Number: 1650123456
+Part 1.Information About Attorney or Accredited Representative.Contact Information.Email Address: immigration@tryalma.ai
+Part 1.Information About Attorney or Accredited Representative.Contact Information.Mobile Telephone Number: None
+Part 1.Information About Attorney or Accredited Representative.Organization.Name of Recognized Organization: N/A
+Part 1.Information About Attorney or Accredited Representative.Organization.Date of Accreditation: N/A
+Part 1.Information About Attorney or Accredited Representative.Bar Number: 12083456
+Part 1.Information About Attorney or Accredited Representative.Licensing Authority: State Bar of California
+Part 1.Information About Attorney or Accredited Representative.Name of Law Firm or Organization: Alma Legal Services PC
+Part 1.Information About Attorney or Accredited Representative.Order Restriction: am not
+Part 2.Eligibility Information for Attorney or Accredited Representative.Attorney Eligibility: Y
+Part 2.Eligibility Information for Attorney or Accredited Representative.Associated with Attorney or Accredited Representative: None
+Part 2.Eligibility Information for Attorney or Accredited Representative.Law Student or Law Graduate: None
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Appearance Relates to.USCIS: Y
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Appearance Relates to.ICE: None
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Appearance Relates to.CBP: Y
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Specific Matter.USCIS: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Specific Matter.ICE: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Specific Matter.CBP: I-129 E-3 Application
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Name.Family Name: Jonas
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Name.Given Name: Joe
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Name.Middle Name: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Entity.Name: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Entity.Title of Authorized Signatory: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Contact Information.Daytime Telephone Number: +61 45453434
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Contact Information.Mobile Telephone Number: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Contact Information.Email Address: b.smith_00@test.ai
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Alien Registration Number: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.USCIS Online Account Number: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Mailing Address.Street Number and Name: 16 Anytown Street
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Mailing Address.Apt Ste Flr: None
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Mailing Address.City or Town: Perth
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Mailing Address.State: WA
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Mailing Address.ZIP Code: N/A
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Mailing Address.Province: WA
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Mailing Address.Postal Code: 6000
+Part 3.Notice of Appearance as Attorney or Accredited Representative.Client Information.Mailing Address.Country: Australia
+Part 4.Client's Consent to Representation and Signature.Consent to Representation: Y
+Part 4.Client's Consent to Representation and Signature.Options Regarding Receipt of USCIS Notices and Documents.Send Notices to Attorney: None
+Part 4.Client's Consent to Representation and Signature.Options Regarding Receipt of USCIS Notices and Documents.Send Secure Identity Document to Attorney: None
+Part 4.Client's Consent to Representation and Signature.Options Regarding Receipt of USCIS Notices and Documents.Send Form I-94 to Client: None
+Part 5.Signature of Attorney or Accredited Representative.Signature of Attorney: None
+Part 5.Signature of Attorney or Accredited Representative.Date of Signature: None
+Part 5.Signature of Attorney or Accredited Representative.Signature of Law Student or Law Graduate: None
+Part 6.Additional Information.Family Name: Smith
+Part 6.Additional Information.Given Name: Barbara
+Part 6.Additional Information.Middle Name: None
+Part 6.Additional Information.Page Number: None
+Part 6.Additional Information.Part Number: None
+Part 6.Additional Information.Item Number: None
