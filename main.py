@@ -594,11 +594,25 @@ async def main(target_url, user_info, headless=True):
             None,
         )
 
-        print("\n" + "=" * 80)
-        print("HUMAN APPROVAL REQUIRED")
-        print("=" * 80)
-        print(interrupt_payload.get("question", "") if interrupt_payload else "")
-        print("=" * 80)
+        # ── Print sentinel so api.py knows to pause and ask the user ──────────
+        # When run via the API, stdout is piped; the sentinel lets the API
+        # capture the fill summary and surface it to the browser UI.
+        # When run directly from the terminal the sentinel is just a visible
+        # separator and the user types their decision normally.
+        question_text = interrupt_payload.get("question", "") if interrupt_payload else ""
+
+        print("\n" + "=" * 80, flush=True)
+        print("HUMAN APPROVAL REQUIRED", flush=True)
+        print("=" * 80, flush=True)
+        print(question_text, flush=True)
+        print("=" * 80, flush=True)
+
+        # Sentinel line — api.py watches for exactly this string
+        import sys as _sys
+        print("__APPROVAL_REQUIRED__", flush=True)
+        print(question_text, flush=True)
+        _sys.stdout.flush()
+
         decision = input("\nYour decision (yes/no): ").strip()
 
         # Resume the graph with the human decision
@@ -638,6 +652,5 @@ python main.py --url https://form.jotform.com/260497189942169 --user_info user_i
 python main.py --url https://form.jotform.com/260497189942169 --user_info user_info2.txt
 python main.py --url https://form.jotform.com/260497189942169 --user_info user_info3.txt
 
-python main.py --url https://mendrika-alma.github.io/form-submission/ --user_info user_info4.txt  --headless false
-
+python main.py --url https://mendrika-alma.github.io/form-submission/ --user_info user_info4.json  --headless false
 """

@@ -15,3 +15,5 @@ uvicorn api:app --reload --port 8000
 Then open http://localhost:8000
 
 
+# Notes
+I have set `HEADLESS = "false"` in the api.py to open a new chrome window.
