@@ -32,7 +32,11 @@ python extrcat_info.py --input_file passport.jpg
 ```
 
 ## main Agent
-you can run `python main.py --url https://mendrika-alma.github.io/form-submission/ --user_info data_example/user_info4.txt  --headless false` to just see how the main code works.
+you can run
+```sh
+python main.py --url https://mendrika-alma.github.io/form-submission/ --user_info data_example/user_info4.txt --headless false
+```
+to just see how the main code works.
 
 
 It uses `langgraph` and
