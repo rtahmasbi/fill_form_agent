@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Form-Filling Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #0a1628;
+    --blue:    #1a3a6b;
+    --accent:  #3b7dd8;
+    --teal:    #0d9488;
+    --light:   #f0f4fa;
+    --white:   #ffffff;
+    --muted:   #64748b;
+    --border:  #dde4f0;
+    --success: #065f46;
+    --success-bg: #d1fae5;
+    --warn-bg: #fef3c7;
+    --warn:    #92400e;
+    --err-bg:  #fee2e2;
+    --err:     #991b1b;
+    --radius:  12px;
+    --shadow:  0 4px 24px rgba(10,22,40,.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--light);
+    color: var(--navy);
+    min-height: 100vh;
+    padding: 36px 20px 60px;
+  }
+
+  /* ── header ── */
+  .header {
+    max-width: 720px;
+    margin: 0 auto 32px;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+  }
+  .header-icon {
+    width: 52px; height: 52px;
+    background: var(--navy);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    box-shadow: 0 6px 20px rgba(10,22,40,.25);
+  }
+  .header-text h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    line-height: 1.1;
+    color: var(--navy);
+  }
+  .header-text p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  /* ── pipeline track ── */
+  .pipeline {
+    max-width: 720px;
+    margin: 0 auto 28px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .pip-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+  .pip-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 18px; left: calc(50% + 18px);
+    width: calc(100% - 36px); height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+  .pip-step.active:not(:last-child)::after { background: var(--accent); }
+  .pip-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    position: relative; z-index: 1;
+    transition: background .3s, color .3s, box-shadow .3s;
+  }
+  .pip-step.active   .pip-dot { background: var(--accent); color: white; box-shadow: 0 0 0 5px rgba(59,125,216,.18); }
+  .pip-step.complete .pip-dot { background: var(--teal); color: white; }
+  .pip-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .pip-step.active   .pip-label { color: var(--accent); }
+  .pip-step.complete .pip-label { color: var(--teal); }
+
+  /* ── cards ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    max-width: 720px;
+    margin: 0 auto 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: box-shadow .2s;
+  }
+  .card:hover { box-shadow: 0 6px 32px rgba(10,22,40,.13); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .step-badge {
+    width: 32px; height: 32px;
+    background: var(--navy);
+    color: white;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .card-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--navy);
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--light);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: var(--blue);
+  }
+
+  /* ── file inputs ── */
+  .file-group { margin-bottom: 14px; }
+  .file-group label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .file-drop {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--light);
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+  .file-drop:hover { border-color: var(--accent); background: #eef4fd; }
+  .file-drop input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .file-drop-label { font-size: 13px; color: var(--muted); pointer-events: none; }
+  .file-drop-label span { color: var(--accent); font-weight: 600; }
+  .file-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--teal);
+    margin-top: 6px;
+    display: none;
+  }
+
+  /* ── url chip ── */
+  .url-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #1d4ed8;
+    margin-bottom: 14px;
+    word-break: break-all;
+  }
+
+  /* ── buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, transform .1s, box-shadow .2s;
+  }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn-primary { background: var(--navy); color: white; box-shadow: 0 2px 10px rgba(10,22,40,.2); }
+  .btn-primary:hover:not(:disabled) { background: var(--blue); box-shadow: 0 4px 16px rgba(10,22,40,.25); }
+  .btn-ghost   { background: var(--light); color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover:not(:disabled) { background: var(--border); }
+  .btn:disabled { background: #c8d0df; color: #8fa0b8; cursor: not-allowed; box-shadow: none; }
+
+  /* ── status card ── */
+  #status-section { display: none; }
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .tag-uploaded   { background: #dbeafe; color: #1e40af; }
+  .tag-extracting,
+  .tag-filling    { background: var(--warn-bg); color: var(--warn); }
+  .tag-extracted  { background: var(--success-bg); color: var(--success); }
+  .tag-done       { background: var(--success-bg); color: var(--success); }
+  .tag-error      { background: var(--err-bg); color: var(--err); }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .meta-item {
+    background: var(--light);
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
+  .meta-item .meta-key {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .meta-item .meta-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--navy);
+    word-break: break-all;
+  }
+
+  pre#log-output {
+    background: var(--navy);
+    color: #94d2f7;
+    padding: 16px 18px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    max-height: 340px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.65;
+    border: 1px solid #1e3a5f;
+  }
+
+  /* ── spinner ── */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  .spinner.dark {
+    border-color: rgba(10,22,40,.15);
+    border-top-color: var(--accent);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── divider ── */
+  .divider {
+    max-width: 720px;
+    margin: 4px auto 16px;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* scrollbar */
+  pre::-webkit-scrollbar { width: 6px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+  pre::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-icon">📋</div>
+  <div class="header-text">
+    <h1>Form-Filling Agent</h1>
+    <p>Upload documents → Extract with GPT-4o → Auto-fill the web form</p>
+  </div>
+</div>
+
+<!-- Pipeline indicator -->
+<div class="pipeline" id="pipeline">
+  <div class="pip-step active" id="pip-1">
+    <div class="pip-dot">1</div>
+    <div class="pip-label">Upload</div>
+  </div>
+  <div class="pip-step" id="pip-2">
+    <div class="pip-dot">2</div>
+    <div class="pip-label">Extract</div>
+  </div>
+  <div class="pip-step" id="pip-3">
+    <div class="pip-dot">3</div>
+    <div class="pip-label">Fill</div>
+  </div>
+</div>
+
+<!-- Step 1: Upload -->
+<div class="card" id="card-upload">
+  <div class="card-header">
+    <div class="step-badge">1</div>
+    <h2>Upload Documents</h2>
+  </div>
+
+  <div class="file-group">
+    <label>Passport &nbsp;· JPG / PNG / WEBP</label>
+    <div class="file-drop" id="drop-passport">
+      <input type="file" id="f-passport" accept=".jpg,.jpeg,.png,.webp"
+             onchange="showFileName('f-passport','name-passport')"/>
+      <div class="file-drop-label">Drop file here or <span>browse</span></div>
+    </div>
+    <div class="file-name" id="name-passport"></div>
+  </div>
+
+  <div class="file-group">
+    <label>G-28 Form &nbsp;· PDF or image</label>
+    <div class="file-drop" id="drop-g28">
+      <input type="file" id="f-g28" accept=".pdf,.jpg,.jpeg,.png,.webp"
+             onchange="showFileName('f-g28','name-g28')"/>
+      <div class="file-drop-label">Drop file here or <span>browse</span></div>
+    </div>
+    <div class="file-name" id="name-g28"></div>
+  </div>
+
+  <button class="btn btn-primary" id="btn-upload" onclick="doUpload()">
+    <span>⬆</span> Upload Files
+  </button>
+</div>
+
+<!-- Step 2: Extract -->
+<div class="card" id="card-extract">
+  <div class="card-header">
+    <div class="step-badge">2</div>
+    <h2>Extract Information</h2>
+  </div>
+  <p class="card-desc">
+    Runs <code>extrcat_info.py</code> on each uploaded file via GPT-4o and
+    writes <code>user_info4.txt</code> for the form agent.
+  </p>
+  <button class="btn btn-primary" id="btn-extract" onclick="doExtract()" disabled>
+    <span id="extract-spinner" class="spinner dark"></span>
+    <span>🔍</span> Extract
+  </button>
+</div>
+
+<!-- Step 3: Fill -->
+<div class="card" id="card-fill">
+  <div class="card-header">
+    <div class="step-badge">3</div>
+    <h2>Fill Web Form</h2>
+  </div>
+  <p class="card-desc">Launches <code>main.py</code> targeting:</p>
+  <div class="url-chip">
+    🌐&nbsp;https://mendrika-alma.github.io/form-submission/
+  </div>
+  <br/>
+  <button class="btn btn-primary" id="btn-fill" onclick="doFill()" disabled>
+    <span id="fill-spinner" class="spinner"></span>
+    <span>🚀</span> Fill Form
+  </button>
+</div>
+
+<hr class="divider"/>
+
+<!-- Status -->
+<div id="status-section" class="card">
+  <div class="card-header">
+    <h2 style="font-size:16px">Live Status</h2>
+    <span id="status-tag" class="tag"></span>
+    <span id="global-spinner" class="spinner dark" style="margin-left:4px"></span>
+  </div>
+
+  <div class="meta-grid" id="job-meta"></div>
+
+  <pre id="log-output">(waiting for output…)</pre>
+
+  <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-ghost" onclick="pollStatus()">↻ Refresh</button>
+  </div>
+</div>
+
+<script>
+let jobId = null;
+let pollTimer = null;
+
+/* ── file name display ── */
+function showFileName(inputId, nameId) {
+  const f   = document.getElementById(inputId).files[0];
+  const el  = document.getElementById(nameId);
+  if (f) { el.textContent = '📄 ' + f.name; el.style.display = 'block'; }
+  else   { el.style.display = 'none'; }
+}
+
+/* ── pipeline ── */
+function setPipeline(active) {
+  [1,2,3].forEach(n => {
+    const el = document.getElementById('pip-' + n);
+    el.className = 'pip-step' + (n < active ? ' complete' : n === active ? ' active' : '');
+  });
+}
+
+/* ── status tag ── */
+function setTag(status) {
+  const el  = document.getElementById('status-tag');
+  const map = {
+    uploaded:   ['Uploaded',    'tag-uploaded'],
+    extracting: ['Extracting…', 'tag-extracting'],
+    extracted:  ['Extracted ✓', 'tag-extracted'],
+    filling:    ['Filling…',    'tag-filling'],
+    done:       ['Done ✓',      'tag-done'],
+  };
+  const key = Object.keys(map).find(k => status.startsWith(k)) || 'error';
+  const [label, cls] = map[key] || [status, 'tag-error'];
+  el.textContent = label;
+  el.className   = 'tag ' + cls;
+  const busy = ['extracting','filling'].some(s => status.startsWith(s));
+  document.getElementById('global-spinner').style.display = busy ? 'inline-block' : 'none';
+}
+
+/* ── meta grid ── */
+function setMeta(data) {
+  const files = (data.files || []).map(f => f.split('/').pop()).join(', ') || '—';
+  document.getElementById('job-meta').innerHTML = `
+    <div class="meta-item"><div class="meta-key">Job ID</div>
+      <div class="meta-val">${data.job_id || '—'}</div></div>
+    <div class="meta-item"><div class="meta-key">Created</div>
+      <div class="meta-val">${(data.created_at || '—').replace('T',' ').slice(0,19)}</div></div>
+    <div class="meta-item"><div class="meta-key">Files</div>
+      <div class="meta-val">${files}</div></div>
+    <div class="meta-item"><div class="meta-key">Status</div>
+      <div class="meta-val">${data.status || '—'}</div></div>
+  `;
+}
+
+function showStatus() { document.getElementById('status-section').style.display = 'block'; }
+
+/* ── Step 1: Upload ── */
+async function doUpload() {
+  const passport = document.getElementById('f-passport').files[0];
+  const g28      = document.getElementById('f-g28').files[0];
+  if (!passport && !g28) { alert('Please select at least one file.'); return; }
+
+  const btn = document.getElementById('btn-upload');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Uploading…';
+
+  const fd = new FormData();
+  if (passport) fd.append('passport', passport);
+  if (g28)      fd.append('g28', g28);
+
+  const res  = await fetch('/upload', { method: 'POST', body: fd });
+  const data = await res.json();
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>⬆</span> Upload Files';
+
+  if (!res.ok) { alert('Upload failed:\n' + JSON.stringify(data.detail)); return; }
+
+  jobId = data.job_id;
+  setMeta({ ...data, status: 'uploaded' });
+  setTag('uploaded');
+  setPipeline(2);
+  document.getElementById('log-output').textContent =
+    'Files saved:\n' + data.files_saved.join('\n');
+  document.getElementById('btn-extract').disabled = false;
+  showStatus();
+}
+
+/* ── Step 2: Extract ── */
+async function doExtract() {
+  if (!jobId) return;
+  document.getElementById('btn-extract').disabled = true;
+  document.getElementById('extract-spinner').style.display = 'inline-block';
+  setTag('extracting');
+  setPipeline(2);
+  document.getElementById('log-output').textContent =
+    'Calling GPT-4o on each file…\n(this may take 20–60 s)';
+
+  const res  = await fetch('/extract/' + jobId, { method: 'POST' });
+  const data = await res.json();
+
+  document.getElementById('extract-spinner').style.display = 'none';
+
+  if (!res.ok) {
+    setTag('error');
+    document.getElementById('log-output').textContent =
+      'Extraction error:\n' + JSON.stringify(data.detail, null, 2);
+    document.getElementById('btn-extract').disabled = false;
+    return;
+  }
+
+  setTag('extracted');
+  setPipeline(3);
+  document.getElementById('log-output').textContent =
+    '── user_info4.txt ──────────────────────────\n\n' + data.user_info_txt;
+  document.getElementById('btn-fill').disabled = false;
+}
+
+/* ── Step 3: Fill ── */
+async function doFill() {
+  if (!jobId) return;
+  document.getElementById('btn-fill').disabled = true;
+  document.getElementById('fill-spinner').style.display = 'inline-block';
+  setTag('filling');
+  document.getElementById('log-output').textContent = 'Launching main.py…';
+
+  const res  = await fetch('/fill/' + jobId, { method: 'POST' });
+  const data = await res.json();
+
+  if (!res.ok) {
+    document.getElementById('fill-spinner').style.display = 'none';
+    setTag('error');
+    document.getElementById('log-output').textContent =
+      'Fill error:\n' + JSON.stringify(data.detail, null, 2);
+    document.getElementById('btn-fill').disabled = false;
+    return;
+  }
+
+  pollTimer = setInterval(pollStatus, 3000);
+}
+
+/* ── Poll status ── */
+async function pollStatus() {
+  if (!jobId) return;
+  const res  = await fetch('/status/' + jobId + '?tail=60');
+  const data = await res.json();
+
+  setTag(data.status || 'unknown');
+  setMeta(data);
+
+  const lines = data.log_tail || [];
+  document.getElementById('log-output').textContent =
+    lines.length ? lines.join('\n') : '(no output yet)';
+
+  const finished = data.status === 'done' ||
+                   (data.status || '').startsWith('fill_failed');
+  if (finished) {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    document.getElementById('fill-spinner').style.display = 'none';
+    document.getElementById('btn-fill').disabled = false;
+    if (data.status === 'done') setPipeline(4);
+  }
+}
+</script>
+</body>
+</html>
