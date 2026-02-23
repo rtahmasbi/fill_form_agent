@@ -47,7 +47,7 @@ from typing import Dict, Optional
 import uvicorn
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 
 # ── paths ─────────────────────────────────────────────────────────────────────
 
@@ -395,6 +395,14 @@ async def ui():
     if not UI_FILE.exists():
         raise HTTPException(status_code=404, detail="index.html not found next to api.py.")
     return HTMLResponse(content=UI_FILE.read_text(encoding="utf-8"))
+
+
+@app.get("/style.css", include_in_schema=False)
+async def css():
+    f = BASE_DIR / "style.css"
+    if not f.exists():
+        raise HTTPException(status_code=404, detail="style.css not found next to api.py.")
+    return FileResponse(f, media_type="text/css")
 
 
 # ── entry point ───────────────────────────────────────────────────────────────
