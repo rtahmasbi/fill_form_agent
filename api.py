@@ -60,8 +60,9 @@ EXTRCAT_PY = BASE_DIR / "extrcat_info.py"
 TARGET_URL = "https://mendrika-alma.github.io/form-submission/"
 HEADLESS   = "false"
 
-# Sentinel that main.py prints just before blocking on input()
-APPROVAL_SENTINEL = "__APPROVAL_REQUIRED__"
+# Sentinels that main.py prints around the summary block
+APPROVAL_SENTINEL = "__APPROVAL_REQUIRED__"   # starts summary capture
+APPROVAL_END      = "__APPROVAL_END__"         # ends summary capture; process blocks on stdin after this
 
 # ── in-memory job store ───────────────────────────────────────────────────────
 
@@ -244,7 +245,7 @@ async def fill(job_id: str):
 
     user_info_path = job.get("user_info_path")
     if not user_info_path or not Path(user_info_path).exists():
-        raise HTTPException(status_code=400, detail="extracted info are missing. Run /extract first.")
+        raise HTTPException(status_code=400, detail="user_info4.txt missing. Run /extract first.")
 
     log_path        = _job_dir(job_id) / "fill.log"
     job["status"]   = "filling"
@@ -280,23 +281,28 @@ async def fill(job_id: str):
 
                 stripped = line.strip()
 
-                # ── detect approval sentinel ──────────────────────────────
+                # ── start capturing after APPROVAL_REQUIRED sentinel ──────
                 if stripped == APPROVAL_SENTINEL:
                     capturing_summary = True
+                    summary_lines = []   # reset in case of re-entry
                     continue
 
-                # ── detect the interactive prompt line ────────────────────
-                # main.py prints "Your decision (yes/no): " then blocks
-                if capturing_summary and "Your decision" in stripped:
-                    # Done capturing — surface to UI
+                # ── stop capturing and surface to UI after APPROVAL_END ───
+                # main.py prints __APPROVAL_END__ then immediately blocks on
+                # stdin.readline() — so after this line the process is frozen
+                # waiting for us to write "yes\n" or "no\n" to its stdin.
+                if capturing_summary and stripped == APPROVAL_END:
                     jobs[job_id]["fill_summary"] = "\n".join(summary_lines).strip()
                     jobs[job_id]["status"]        = "awaiting_approval"
-                    # Don't break — keep reading (process is blocked on stdin)
                     capturing_summary = False
+                    # Keep the read-loop running so we hold the pipe open.
+                    # The process is now blocked on stdin; readline() will
+                    # return empty bytes only after we close stdin (on decline)
+                    # or after the process finishes (on approve+submit).
                     continue
 
                 if capturing_summary:
-                    summary_lines.append(stripped)
+                    summary_lines.append(line.rstrip("\n"))
 
         # Process exited (after approval or cancellation)
         rc = await proc.wait()

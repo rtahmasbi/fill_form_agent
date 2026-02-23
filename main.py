@@ -642,26 +642,41 @@ async def main(target_url, user_info, headless=True):
             None,
         )
 
-        # ── Print sentinel so api.py knows to pause and ask the user ──────────
-        # When run via the API, stdout is piped; the sentinel lets the API
-        # capture the fill summary and surface it to the browser UI.
-        # When run directly from the terminal the sentinel is just a visible
-        # separator and the user types their decision normally.
+        # ── Signal api.py (or the terminal user) that approval is needed ───────
+        import sys as _sys
+
         question_text = interrupt_payload.get("question", "") if interrupt_payload else ""
 
+        # Always print a human-readable header first
         print("\n" + "=" * 80, flush=True)
         print("HUMAN APPROVAL REQUIRED", flush=True)
         print("=" * 80, flush=True)
         print(question_text, flush=True)
         print("=" * 80, flush=True)
 
-        # Sentinel line — api.py watches for exactly this string
-        import sys as _sys
+        # ── Sentinel protocol ────────────────────────────────────────────────
+        # api.py watches stdout for EXACTLY these two lines in order:
+        #   Line 1: __APPROVAL_REQUIRED__
+        #   Line 2: <the full question/summary text>
+        #   Line 3: __APPROVAL_END__   ← marks end of summary so api.py stops capturing
+        # After printing the sentinel block we flush and then block on stdin.
         print("__APPROVAL_REQUIRED__", flush=True)
-        print(question_text, flush=True)
+        # Emit the summary line-by-line so api.py can capture it
+        for _line in question_text.splitlines():
+            print(_line, flush=True)
+        print("__APPROVAL_END__", flush=True)
         _sys.stdout.flush()
 
-        decision = input("\nYour decision (yes/no): ").strip()
+        # Read decision from stdin.
+        # - When run via api.py: api.py writes "yes\n" or "no\n" to our stdin pipe.
+        # - When run directly from terminal: the user types their answer.
+        # We use sys.stdin.readline() instead of input() because input() writes
+        # its prompt to stdout in a non-pipe-safe way and may not flush correctly.
+        _sys.stderr.write("\nYour decision (yes/no): ")
+        _sys.stderr.flush()
+        decision = _sys.stdin.readline().strip()
+        if not decision:
+            decision = "no"   # treat closed/empty stdin as cancellation
 
         # Resume the graph with the human decision
         async for event in graph.astream(
