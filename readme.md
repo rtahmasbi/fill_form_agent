@@ -1,10 +1,21 @@
 
+# download
+```sh
+git clone https://github.com/rtahmasbi/fill_form_agent.git
+cd fill_form_agent
+```
 
 # make env
 
+
 ## with uv
+make sure you have the `uv` installed:
 ```sh
-cd fill_form_agent
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+
+```sh
 uv venv --python 3.11
 source .venv/bin/activate
 uv pip install -r requirements.txt
@@ -27,6 +38,13 @@ uvicorn api:app --reload --port 8000
 
 Then open http://localhost:8000
 
+
+
+## if you want to run on specific host
+```sh
+uvicorn api:app --reload --host 0.0.0.0 --port 8000
+# then make sure you run it with HEADLESS = "false" `in the api.py`
+```
 
 
 # Notes
