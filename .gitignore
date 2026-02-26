@@ -2,3 +2,4 @@ jobs/
 .DS_Store
 video_recorded.mp4
 __pycache__/
+.venv/

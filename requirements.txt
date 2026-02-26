@@ -8,7 +8,6 @@ certifi==2026.1.4
 charset-normalizer==3.4.4
 dataclasses-json==0.6.7
 distro==1.9.0
-faiss-cpu==1.13.2
 frozenlist==1.8.0
 grandalf==0.8
 greenlet==3.3.1
@@ -64,6 +63,6 @@ uuid_utils==0.14.1
 xxhash==3.6.0
 yarl==1.22.0
 zstandard==0.25.0
-fastapi
-uvicorn
-python-multipart
+fastapi==0.132.0
+uvicorn==0.41.0
+python-multipart==0.0.22

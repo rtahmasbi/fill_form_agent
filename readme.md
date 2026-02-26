@@ -1,6 +1,16 @@
 
 
 # make env
+
+## with uv
+```sh
+cd fill_form_agent
+uv venv --python 3.11
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+## with conda
 ```sh
 conda create -n agent_fill_online_form python=3.11
 conda activate agent_fill_online_form
@@ -9,6 +19,8 @@ pip install -r requirements.txt
 
 
 # Run
+Make sure you have set your OpenAi API key: `export OPENAI_API_KEY=xxxxx`
+
 ```sh
 uvicorn api:app --reload --port 8000
 ```

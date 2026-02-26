@@ -596,7 +596,7 @@ builder.add_edge("tools_submit",   "agent")
 
 graph = builder.compile(checkpointer=MemorySaver())
 print(graph.get_graph().draw_ascii())
-graph.get_graph().draw_png("/tmp/graph.png")
+#graph.get_graph().draw_png("/tmp/graph.png")
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
